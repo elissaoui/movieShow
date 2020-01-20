@@ -1,6 +1,4 @@
 
-
-
 MIN = 3
 
 class MovieShow(object):
