@@ -1,0 +1,90 @@
+
+
+
+MIN = 3
+
+class MovieShow(object):
+    NOT_AVAILABLE = (-1, -1)
+
+    def __init__(self, title, showtime, auditorium, rows, seats_in_row):
+        self.__movie = title
+        self.__time = showtime
+        self.__theatre = auditorium
+        rows, seats_in_row = self.verify_rows(rows, seats_in_row)
+        self.__seats = [[True for _ in range(seats_in_row)] for _ in range(rows)]
+
+    def get_movie(self):
+        return self.__movie
+
+    def get_time(self):
+        return self.__time
+    
+    def get_theatre(self):
+        return self.__theatre
+    
+    def reserve_seat(self, row, seat):
+        if not self.seat_exists(row, seat): return False
+        if self.__seats[row - 1][seat - 1]:
+            self.__seats[row - 1][seat - 1] = False
+            return True
+        return False
+    
+    def reserve_seats(self, row, first, last):
+        if not self.seat_exists(row, first): return False
+        if not self.seat_exists(row, last): return False
+        if False in self.__seats[row - 1][first - 1:last]:
+            return False
+        self.__seats[row - 1][first - 1:last] = [False for _ in range(last - first + 1)]
+        return True
+
+    def seats_total(self):
+        return len(self.__seats) * len(self.__seats[0])
+
+    def total_reserved(self):
+        count = 0
+        for row in self.__seats:
+            count += row.count(False)
+        return count
+
+    def find_available_seats(self, number):
+        count = 0
+        for row, seats in reversed(list(enumerate(self.__seats, 1))):
+            for seat, available in enumerate(seats, 1):
+                if available:
+                    count += 1
+                else:
+                    count = 0
+                if count == number:
+                    return (row, seat - number + 1)
+            count = 0
+        return (-1, -1)
+
+    def get_reservation_map(self):
+        reservation_map = ""
+        for row, seats in reversed(list(enumerate(self.__seats, 1))):
+            seats = "".join(["-" if seat else "X" for seat in seats])
+            reservation_map += "{}:".format(row) + seats + "\n"
+        return reservation_map
+
+    def verify_rows(self, rows, seats_in_row):
+        if rows < MIN and seats_in_row < MIN:
+            rows = seats_in_row = MIN
+        elif rows < MIN:
+            rows = MIN
+        elif seats_in_row < MIN:
+            seats_in_row = MIN
+        return rows, seats_in_row
+
+    def seat_exists(self, row, seat):
+        try:
+            self.__seats[row - 1][seat - 1]
+            return True
+        except IndexError:
+            return False
+
+    def __str__(self):
+        return "{} {} {} {}/{}".format(
+            self.__time, self.__movie, self.__theatre, 
+            self.total_reserved(), self.seats_total()
+            )
+
